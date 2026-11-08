@@ -1,0 +1,9 @@
+# 공개할 것만 남긴다(시험 그림·빌드 결과·외부 파일은 이 PC에만).
+/*
+!/.gitignore
+!/README.md
+!/LICENSE
+!/DotMaker/
+!/scripts/
+/DotMaker/build/
+.DS_Store
