@@ -43,4 +43,4 @@ xattr -dr com.apple.quarantine "/Applications/도트메이커 JEV 부위별 진�
 - [ONNX Runtime](https://github.com/microsoft/onnxruntime): MIT
 - [skytnt/anime-seg](https://huggingface.co/skytnt/anime-seg) (isnetis.onnx): Apache-2.0
 
-윈도우판은 준비 중입니다.
+윈도우판: [DotMaker-3.0.0-win-x64.exe](https://github.com/YSoung99/dotmaker/releases/download/v3.0.0-windows/DotMaker-3.0.0-win-x64.exe) (소스는 [YSoung99/dotmaker의 desktop-app 브랜치](https://github.com/YSoung99/dotmaker/tree/desktop-app)).
