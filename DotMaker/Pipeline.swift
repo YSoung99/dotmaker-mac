@@ -98,8 +98,10 @@ struct DotSettings: Equatable, Sendable {
     var colors = 12
     var cleanup = 1
     var method = DotMethod.berry
-    /// 원본 보존: 가장 바깥 외곽선을 검은 1픽셀로 또렷하게
+    /// 원본 보존: 가장 바깥 외곽선을 1픽셀로 또렷하게(원본에 선이 있는 칸만, 원본 선 색으로)
     var crispOutline = false
+    /// 원본 보존: 칸 색을 그 자리 원본에 실제로 있는 가장 가까운 색으로
+    var snapColors = false
     /// 원본 보존: 경계에서 양쪽 색이 섞여 생긴 중간색을 가까운 쪽 색으로
     var cleanBlends = false
     var preserveMouth = false
@@ -165,9 +167,40 @@ enum Dotting {
         return picks
     }
 
-    /// Redraws the outermost silhouette as a crisp one-pixel black line and drops faint pixels outside it.
+    /// 원본 색 맞추기: 축소 평균으로 생긴 중간색 대신, 그 칸(둘레 반 칸 포함) 원본에 실제로 있는 가장 가까운 색을 넣는다.
+    static func snapColors(_ input: Raster, reduced: Reduced, subject: Raster) -> Raster {
+        var output = input
+        let rect = reduced.contentRect, w = input.grid.w
+        let sw = Int(rect.width), sh = Int(rect.height), ox = Int(rect.minX), oy = Int(rect.minY)
+        let W = subject.grid.w, H = subject.grid.h
+        let cw = Double(W) / Double(sw), ch = Double(H) / Double(sh)
+        let mx = max(1, Int(cw / 2)), my = max(1, Int(ch / 2))
+        for v in 0..<sh {
+            let y0 = max(0, Int(Double(v) * ch) - my), y1 = min(H, Int(Double(v + 1) * ch) + my)
+            for u in 0..<sw {
+                let i = (v + oy) * w + u + ox, p = input.pixels[i]
+                guard p.a >= 128 else { continue }
+                let x0 = max(0, Int(Double(u) * cw) - mx), x1 = min(W, Int(Double(u + 1) * cw) + mx)
+                var best: Pixel?, bestDistance = Int.max
+                for y in y0..<y1 {
+                    for x in x0..<x1 {
+                        let q = subject.pixels[y * W + x]
+                        guard q.a >= 128 else { continue }
+                        let d = p.distance(to: q)
+                        if d < bestDistance { bestDistance = d; best = q }
+                    }
+                }
+                if let best { output.pixels[i] = Pixel(best.r, best.g, best.b, p.a) }
+            }
+        }
+        return output
+    }
+
+    /// Redraws the outermost silhouette as a crisp one-pixel line and drops faint pixels outside it.
+    /// With `cells`, an edge cell takes the original line color only where the original has a line there
+    /// (other edge cells keep their color); without, the whole edge becomes black.
     /// A piece whose rim is mostly light (an intentional white outline) keeps its own rim colors.
-    static func crispOutline(_ input: Raster) -> Raster {
+    static func crispOutline(_ input: Raster, cells: [Cell]? = nil) -> Raster {
         var output = Raster(w: input.grid.w, h: input.grid.h)
         let solid = input.pixels.map { $0.a >= 128 }
         for piece in input.grid.components(solid) {
@@ -187,8 +220,11 @@ enum Dotting {
             }
             let outline = Set(lightRim ? [] : rim.filter { !shadow($0) })
             for i in piece {
-                let p = input.pixels[i]
-                output.pixels[i] = outline.contains(i) ? .black : Pixel(p.r, p.g, p.b)
+                var p = input.pixels[i]
+                if outline.contains(i) {
+                    if let cells { if cells[i].dark >= 5 { p = cells[i].ink } } else { p = .black }
+                }
+                output.pixels[i] = Pixel(p.r, p.g, p.b)
             }
         }
         return output

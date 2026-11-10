@@ -6,7 +6,8 @@
 ## 주요 기능
 
 - **원본 보존 방식**: 원본 픽셀이 결과 격자 한 칸에 걸치는 넓이만큼 그대로 평균 내서, 중간 축소 없이 바로 도트로 만듭니다.
-- **바깥 외곽선 1픽셀 검정**: 가장 바깥 외곽선을 또렷한 검은 1픽셀로 다시 긋습니다. 흰 외곽선 장식과 바닥 그림자는 건드리지 않습니다.
+- **바깥 외곽선 1픽셀(원본 선 색)**: 투명 배경 바로 앞 가장 바깥 칸만, 원본 그 자리에 선이 있으면 원본 선 색으로 또렷하게 다시 긋습니다. 흰 외곽선 장식과 바닥 그림자는 건드리지 않습니다.
+- **원본 색 맞추기**: 축소하면서 생긴 탁한 중간색 대신, 그 칸 원본에 실제로 있는 가장 가까운 색을 넣습니다.
 - **경계 섞인 색 정리**: 축소하면서 경계에 생긴 탁한 중간색(빨강+검정 → 자주 등)을 가까운 원래 색으로 바꿉니다.
 - **AI 업스케일(ESRGAN)**: 도트화하기 전에 원본을 [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) 애니 모델로 4배 키워 흐린 선·잡티를 정리합니다. 자동(원본이 결과 크기의 4배보다 작을 때만 6B) · 6B(더 깔끔) · v3(더 빠름) · 끄기 중에서 고릅니다. 모델은 앱에 들어 있습니다.
 - **배경 분리 AI**: 흰색·단색·투명 배경은 코드로, 그 밖의 배경은 [anime-seg](https://huggingface.co/skytnt/anime-seg)(ONNX Runtime)로 캐릭터만 오려 냅니다. 모델은 앱에 들어 있습니다.
@@ -45,4 +46,4 @@ xattr -dr com.apple.quarantine "/Applications/도트메이커 JEV 부위별 진�
 - [skytnt/anime-seg](https://huggingface.co/skytnt/anime-seg) (isnetis.onnx): Apache-2.0
 - [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) (RealESRGAN_x4plus_anime_6B, realesr-animevideov3 → ONNX): BSD-3-Clause
 
-윈도우판: [DotMaker-3.1.0-win-x64.exe](https://github.com/YSoung99/dotmaker/releases/download/v3.1.0-windows/DotMaker-3.1.0-win-x64.exe) (소스는 [YSoung99/dotmaker의 desktop-app 브랜치](https://github.com/YSoung99/dotmaker/tree/desktop-app)).
+윈도우판: [DotMaker-3.2.0-win-x64.exe](https://github.com/YSoung99/dotmaker/releases/download/v3.2.0-windows/DotMaker-3.2.0-win-x64.exe) (소스는 [YSoung99/dotmaker의 desktop-app 브랜치](https://github.com/YSoung99/dotmaker/tree/desktop-app)).

@@ -32,9 +32,11 @@ private struct Product: Sendable {
         }
         switch settings.method {
         case .faithful:
-            var cleaned = settings.cleanBlends ? Dotting.cleanBlends(reduced.image) : reduced.image
+            var cleaned = settings.snapColors ? Dotting.snapColors(reduced.image, reduced: reduced, subject: subject) : reduced.image
+            if settings.cleanBlends { cleaned = Dotting.cleanBlends(cleaned) }
             if settings.preserveMouth { FaceDetail.preserveMouth(&cleaned, source: reduced) }
-            dotted = try jevResult ?? Dotting.preserve(image: settings.crispOutline ? Dotting.crispOutline(cleaned) : cleaned)
+            dotted = try jevResult ?? Dotting.preserve(image: settings.crispOutline
+                ? Dotting.crispOutline(cleaned, cells: reduced.cells) : cleaned)
         case .berry:
             dotted = try LegacyDot.render(subject: subject, w: size.w, h: size.h, settings: settings)
         case .basic, .direct:
@@ -536,7 +538,10 @@ private struct ContentView: View {
                             }
                         }
                         HStack(spacing: 16) {
-                            Toggle("바깥 외곽선 1픽셀 검정", isOn: $model.settings.crispOutline)
+                            Toggle("바깥 외곽선 1픽셀(원본 선 색)", isOn: $model.settings.crispOutline)
+                                .help("투명 배경 바로 앞 가장 바깥 칸만, 원본 그 자리에 선이 있으면 원본 선 색으로 칠합니다. 흰 외곽선 장식과 바닥 그림자는 그대로 둡니다.")
+                            Toggle("원본 색 맞추기", isOn: $model.settings.snapColors)
+                                .help("축소하면서 생긴 탁한 중간색 대신, 그 칸 원본에 실제로 있는 가장 가까운 색을 넣습니다.")
                             Toggle("경계 섞인 색 정리", isOn: $model.settings.cleanBlends)
                             Toggle("작은 입선 보존", isOn: $model.settings.preserveMouth)
                         }
