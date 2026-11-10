@@ -1,14 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-    <key>CFBundleExecutable</key><string>DotMaker</string>
-    <key>CFBundleIdentifier</key><string>local.dotmaker.jev-details-trial</string>
-    <key>CFBundleName</key><string>도트메이커 JEV 부위별 진단 시험</string>
-    <key>CFBundleDisplayName</key><string>도트메이커 JEV 부위별 진단 시험</string>
-    <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>2.9.0</string>
-    <key>CFBundleVersion</key><string>20</string>
-    <key>CFBundleIconFile</key><string>DotMaker.icns</string>
-    <key>LSMinimumSystemVersion</key><string>14.0</string>
-    <key>NSHighResolutionCapable</key><true/>
-</dict></plist>
+<plist version="1.0">
+<dict>
+	<key>CFBundleDisplayName</key>
+	<string>도트메이커 JEV 부위별 진단 시험</string>
+	<key>CFBundleExecutable</key>
+	<string>DotMaker</string>
+	<key>CFBundleIconFile</key>
+	<string>DotMaker.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>local.dotmaker.jev-details-trial</string>
+	<key>CFBundleName</key>
+	<string>도트메이커 JEV 부위별 진단 시험</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>3.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>21</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+</dict>
+</plist>

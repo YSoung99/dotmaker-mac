@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 enum DotError: LocalizedError {
     case read, render, subject, write, dimensions
     case segment(String)
+    case upscale(String)
 
     var errorDescription: String? {
         switch self {
@@ -15,6 +16,7 @@ enum DotError: LocalizedError {
         case .write: "PNG를 저장하지 못했습니다."
         case .dimensions: "가로와 세로를 각각 16~512px로 입력해 주세요."
         case .segment(let message): "배경 분리 AI를 실행하지 못했습니다: \(message)"
+        case .upscale(let message): "AI 업스케일(ESRGAN)을 실행하지 못했습니다: \(message)"
         }
     }
 }

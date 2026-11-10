@@ -102,6 +102,9 @@ struct DotSettings: Equatable, Sendable {
     var crispOutline = false
     /// 원본 보존: 경계에서 양쪽 색이 섞여 생긴 중간색을 가까운 쪽 색으로
     var cleanBlends = false
+    var preserveMouth = false
+    /// 도트화 전에 원본을 ESRGAN으로 4배 키울지(자동: 작은 원본일 때만)
+    var upscale = UpscaleMode.auto
 
 }
 

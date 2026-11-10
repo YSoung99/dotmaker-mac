@@ -5,6 +5,41 @@ enum FaceDetail {
         deepenBlush(&raster, mask: mask, eyes: findEyes(raster, mask: mask))
     }
 
+    /// Preserve an isolated dark stroke between a detected pair of eyes.
+    static func preserveMouth(_ raster: inout Raster, source: Reduced) {
+        let grid = raster.grid
+        let eyes = findEyes(source.image, mask: source.cells.map { $0.cover >= 220 })
+            .sorted { $0.minX < $1.minX }
+        guard eyes.count == 2 else { return }
+        let left = eyes[0], right = eyes[1]
+        let x0 = left.maxX + 2, x1 = right.minX - 2
+        let bottom = (left.maxY + right.maxY) / 2
+        let height = max(2, min(left.maxY - left.minY, right.maxY - right.minY))
+        let y0 = max(1, bottom - height / 3), y1 = min(grid.h - 2, bottom + height * 2 / 3)
+        guard x1 - x0 >= 3, y0 <= y1 else { return }
+        let candidates = source.cells.indices.map { i in
+            let x = i % grid.w, y = i / grid.w, cell = source.cells[i]
+            return x >= x0 && x <= x1 && y >= y0 && y <= y1 &&
+                cell.cover >= 220 && cell.dark >= 20 && cell.ink.light < 85 &&
+                (cell.dark >= 85 || cell.fill.light >= 180)
+        }
+        let pieces = grid.components(candidates).filter { piece in
+            guard piece.count >= 3 else { return false }
+            let xs = piece.map { $0 % grid.w }, ys = piece.map { $0 / grid.w }
+            return xs.max()! - xs.min()! >= 2 && ys.max()! - ys.min()! <= height / 2
+                && ys.min()! > y0 && ys.max()! < y1
+        }
+        guard pieces.count == 1, let mouth = pieces.first else { return }
+        let columns = Dictionary(grouping: mouth, by: { $0 % grid.w })
+        let stroke = columns.values.compactMap { column in
+            column.max { source.cells[$0].dark < source.cells[$1].dark }
+        }
+        for i in stroke {
+            let ink = source.cells[i].ink
+            raster.pixels[i] = Pixel(ink.r, ink.g, ink.b, raster.pixels[i].a)
+        }
+    }
+
     private static func isEye(_ p: Pixel) -> Bool {
         p.a > 0 && !LineCleanup.isInk(p) && p.chroma > 24 && p.b > p.g && Int(p.b) >= Int(p.r) - 12
     }

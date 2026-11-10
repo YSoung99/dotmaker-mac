@@ -32,7 +32,8 @@ private struct Product: Sendable {
         }
         switch settings.method {
         case .faithful:
-            let cleaned = settings.cleanBlends ? Dotting.cleanBlends(reduced.image) : reduced.image
+            var cleaned = settings.cleanBlends ? Dotting.cleanBlends(reduced.image) : reduced.image
+            if settings.preserveMouth { FaceDetail.preserveMouth(&cleaned, source: reduced) }
             dotted = try jevResult ?? Dotting.preserve(image: settings.crispOutline ? Dotting.crispOutline(cleaned) : cleaned)
         case .berry:
             dotted = try LegacyDot.render(subject: subject, w: size.w, h: size.h, settings: settings)
@@ -70,6 +71,8 @@ final class DotMakerModel: ObservableObject {
     @Published private(set) var file: URL?
     @Published private(set) var colorStatus: String?
     @Published private var product: Product?
+    /// 도트화에 쓴 원본(AI 업스케일을 거쳤으면 4배로 키운 그림)과 쓴 모델. 모델이 그대로면 다시 만들지 않는다.
+    private var prepared: (image: CGImage, model: String?)?
     /// 도트 그림 저장 배율(1·2·4·8배). 다음에 앱을 열어도 기억한다.
     @Published var exportScale = max(1, UserDefaults.standard.integer(forKey: "exportScale")) {
         didSet { UserDefaults.standard.set(exportScale, forKey: "exportScale") }
@@ -89,8 +92,9 @@ final class DotMakerModel: ObservableObject {
     }
     var dotStatus: String? {
         guard let product else { return nil }
+        let sharpened = prepared?.model.map { "  ·  AI 업스케일 \(Upscaler.label($0))" } ?? ""
         if product.settings.method == .faithful {
-            return "원본 보존  ·  \(product.dottedImage.width)×\(product.dottedImage.height) px  ·  투명 PNG"
+            return "원본 보존  ·  \(product.dottedImage.width)×\(product.dottedImage.height) px  ·  투명 PNG" + sharpened
         }
         let dotted = product.dotted
         guard product.settings.method == .basic else {
@@ -116,10 +120,13 @@ final class DotMakerModel: ObservableObject {
         let options = settings
         run("원본에서 캐릭터 분리 중", work: {
             let original = try Raster.load(url, originalResolution: true)
-            let subject = try Subject.extract(original, preserveTransparentArt: options.method == .faithful)
-            return try Product(original: original, subject: subject, size: Grid(w: w, h: h), settings: options)
-        }) {
-            self.product = $0
+            let model = Upscaler.model(for: original, mode: options.upscale, target: max(w, h))
+            let source = try model.map { try Upscaler.upscale(original, model: $0) } ?? original
+            let subject = try Subject.extract(source, preserveTransparentArt: options.method == .faithful)
+            return (try Product(original: original, subject: subject, size: Grid(w: w, h: h), settings: options), source, model)
+        }) { product, source, model in
+            self.product = product
+            self.prepared = (source, model)
             self.file = url
             self.colorStatus = nil
         }
@@ -129,9 +136,17 @@ final class DotMakerModel: ObservableObject {
         guard let product, let (w, h) = dimensions() else { return }
         let options = settings
         colorStatus = nil
-        run("캐릭터 축소 중", work: {
-            try Product(original: product.original, subject: product.subject, size: Grid(w: w, h: h), settings: options)
-        }) { self.product = $0 }
+        let model = Upscaler.model(for: product.original, mode: options.upscale, target: max(w, h))
+        let reuse = prepared?.model == model ? prepared : nil
+        run(reuse == nil ? "AI가 원본을 4배로 키우는 중" : "캐릭터 축소 중", work: {
+            let source = try reuse?.image ?? (model.map { try Upscaler.upscale(product.original, model: $0) } ?? product.original)
+            let subject = reuse != nil ? product.subject
+                : try Subject.extract(source, preserveTransparentArt: options.method == .faithful)
+            return (try Product(original: product.original, subject: subject, size: Grid(w: w, h: h), settings: options), source, model)
+        }) { product, source, model in
+            self.product = product
+            self.prepared = (source, model)
+        }
     }
 
     func redot() {
@@ -139,13 +154,19 @@ final class DotMakerModel: ObservableObject {
         let options = settings
         colorStatus = nil
         let faithful = options.method == .faithful
-        let sameSubject = faithful == (product.settings.method == .faithful)
-        run(faithful ? "원본의 선과 색을 맞추는 중" : "외곽선 정리 중", work: {
+        let model = Upscaler.model(for: product.original, mode: options.upscale, target: product.reduced.image.grid.w)
+        let reuse = prepared?.model == model ? prepared : nil
+        let sameSubject = reuse != nil && faithful == (product.settings.method == .faithful)
+        run(reuse == nil ? "AI가 원본을 4배로 키우는 중" : faithful ? "원본의 선과 색을 맞추는 중" : "외곽선 정리 중", work: {
+            let source = try reuse?.image ?? (model.map { try Upscaler.upscale(product.original, model: $0) } ?? product.original)
             let subject = sameSubject ? product.subject
-                : try Subject.extract(product.original, preserveTransparentArt: faithful)
-            return try Product(original: product.original, subject: subject, size: product.reduced.image.grid,
-                               settings: options, cachedReduction: sameSubject ? product.reduced : nil)
-        }) { self.product = $0 }
+                : try Subject.extract(source, preserveTransparentArt: faithful)
+            return (try Product(original: product.original, subject: subject, size: product.reduced.image.grid,
+                                settings: options, cachedReduction: sameSubject ? product.reduced : nil), source, model)
+        }) { product, source, model in
+            self.product = product
+            self.prepared = (source, model)
+        }
     }
 
     func optimizeColors() {
@@ -484,10 +505,18 @@ private struct ContentView: View {
             switch stage {
             case .dot:
                 VStack(alignment: .leading, spacing: 8) {
-                    Picker("결과 크기", selection: $model.size) {
-                        ForEach(DotMakerModel.sizes, id: \.self) { Text("\($0)×\($0)").tag($0) }
+                    HStack(spacing: 16) {
+                        Picker("결과 크기", selection: $model.size) {
+                            ForEach(DotMakerModel.sizes, id: \.self) { Text("\($0)×\($0)").tag($0) }
+                        }
+                        .fixedSize()
+                        Picker("AI 업스케일", selection: $model.settings.upscale) {
+                            ForEach(UpscaleMode.allCases) { Text($0.rawValue).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 330)
+                        .help("도트화하기 전에 원본을 AI(Real-ESRGAN)로 4배 키워 흐린 선과 잡티를 정리합니다. 자동은 원본이 결과 크기의 4배보다 작을 때만 켭니다. 6B는 더 깔끔하고, v3는 더 빠릅니다.")
                     }
-                    .fixedSize()
                     Picker("도트화 방식", selection: $model.settings.method) {
                         ForEach(DotMethod.allCases) { Text($0.rawValue).tag($0) }
                     }
@@ -509,6 +538,7 @@ private struct ContentView: View {
                         HStack(spacing: 16) {
                             Toggle("바깥 외곽선 1픽셀 검정", isOn: $model.settings.crispOutline)
                             Toggle("경계 섞인 색 정리", isOn: $model.settings.cleanBlends)
+                            Toggle("작은 입선 보존", isOn: $model.settings.preserveMouth)
                         }
                         Text("JEV를 실행하면 배경을 분리한 원본과 후보를 LLM Gateway로 보냅니다.")
                             .font(.caption).foregroundStyle(.secondary)
