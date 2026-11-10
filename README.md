@@ -1,7 +1,7 @@
 # 도트메이커 (맥)
 
 캐릭터 그림 한 장을 열면 **원본의 선 굵기와 명암을 그대로 살린 도트 그림(투명 PNG)**으로 바꿔 주는 맥 앱입니다.
-결과 크기는 100×100부터 200×200까지 10px 단위로 고를 수 있습니다.
+결과 크기는 50×50부터 200×200까지 10px 단위로 고를 수 있습니다.
 
 ## 주요 기능
 
@@ -18,6 +18,15 @@
 - **AI 보정 탭**: PixelLab·Gemini·OpenAI(내 API 키)로 다시 그리거나 다듬습니다. 키는 맥 키체인에 저장됩니다.
 - **설명서 탭**: 기능과 문제 해결 안내.
 - 윈도우 프로그램과 기능이 모두 같습니다.
+
+## 업데이트 기록
+
+- **3.4.0**: 결과 크기를 **50×50부터** 고를 수 있습니다(50 ~ 200, 10px 단위). 도트화 탭과 AI 보정 탭이 같은 크기를 씁니다.
+- **3.3.0**: 맥 앱과 윈도우 프로그램의 기능을 모두 같게 맞췄습니다. 원본 색 살림·원본 직행 방식, 선 추출 AI, AI 보정 탭(PixelLab·Gemini·OpenAI), 설명서 탭, JEV 선·색 비교와 자동 선택. 윈도우는 인터넷 없이도 AI 업스케일이 되고, 실패하면 업스케일 없이 도트화합니다.
+- **3.2.1**(윈도우): 인터넷 없이도 AI 업스케일, 업스케일이 실패해도 그림은 열기.
+- **3.2.0**: 바깥 외곽선 1픽셀을 원본 선 색으로, 원본 색 맞추기(기본 끔).
+- **3.1.0**: AI 업스케일(Real-ESRGAN 4배, 자동·6B·v3·끄기), 작은 입선 보존.
+- **3.0.0**: 첫 공개. 원본 보존 도트화(100×100 ~ 200×200), 바깥 외곽선 1픽셀 검정, 경계 섞인 색 정리, 배경 분리 AI, JEV 부위별 진단·섞인 색 판정.
 
 ## 설치
 
@@ -52,4 +61,4 @@ xattr -dr com.apple.quarantine "/Applications/도트메이커 JEV 부위별 진�
 - [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) (RealESRGAN_x4plus_anime_6B, realesr-animevideov3 → ONNX): BSD-3-Clause
 - [p1atdev/MangaLineExtraction-hf](https://huggingface.co/p1atdev/MangaLineExtraction-hf) (선 추출, `DotMaker/lines-graph.onnx`는 구조만): MIT
 
-윈도우판: [DotMaker-3.3.0-win-x64.exe](https://github.com/YSoung99/dotmaker/releases/download/v3.3.0-windows/DotMaker-3.3.0-win-x64.exe) (소스는 [YSoung99/dotmaker의 desktop-app 브랜치](https://github.com/YSoung99/dotmaker/tree/desktop-app)).
+윈도우판: [DotMaker-3.4.0-win-x64.exe](https://github.com/YSoung99/dotmaker/releases/download/v3.4.0-windows/DotMaker-3.4.0-win-x64.exe) (소스는 [YSoung99/dotmaker의 desktop-app 브랜치](https://github.com/YSoung99/dotmaker/tree/desktop-app)).

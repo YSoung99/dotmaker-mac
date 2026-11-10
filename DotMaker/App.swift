@@ -89,7 +89,7 @@ final class DotMakerModel: ObservableObject {
     @Published var keyStatus = ""
     /// 결과 캔버스 한 변(정사각형). 바꾸면 바로 다시 그린다.
     @Published var size = 100 { didSet { if oldValue != size { resize() } } }
-    static let sizes = Array(stride(from: 100, through: 200, by: 10))
+    static let sizes = Array(stride(from: 50, through: 200, by: 10))
     @Published var settings = DotSettings(method: .faithful)
     @Published private(set) var busy: String?
     @Published private(set) var error: String?
@@ -989,7 +989,7 @@ private struct HelpView: View {
     private let sections = [
         Section(title: "시작하기", items: [
             "**이미지 열기…** 버튼을 누르거나 이미지를 창에 끌어다 놓습니다. ⌘O",
-            "**결과 크기**: 100×100 ~ 200×200(10px 단위)에서 고르면 바로 다시 그립니다. 배경은 자동으로 지우고 캐릭터를 캔버스에 맞춥니다.",
+            "**결과 크기**: 50×50 ~ 200×200(10px 단위)에서 고르면 바로 다시 그립니다. 배경은 자동으로 지우고 캐릭터를 캔버스에 맞춥니다.",
             "**도트화** 탭: 설정을 바꾸면 바로 다시 계산합니다.",
             "**PNG 저장…**: 지금 탭의 결과를 저장합니다. ⌘S · 저장 배율(1·2·4·8배)은 번짐 없이 키우고, 다음에도 기억합니다.",
         ]),
