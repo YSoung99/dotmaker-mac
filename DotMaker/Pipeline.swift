@@ -105,6 +105,13 @@ struct DotSettings: Equatable, Sendable {
     /// 원본 보존: 경계에서 양쪽 색이 섞여 생긴 중간색을 가까운 쪽 색으로
     var cleanBlends = false
     var preserveMouth = false
+    /// 원본 색 살림: 최대 색 수, 선 1픽셀 정리, 선명하게(채도 +25%), 테두리·색 면 정리
+    var softColors = 24
+    var softLines = true
+    var softVivid = true
+    var softClean = true
+    /// 베리 잉크·2.0 방식·원본 직행: 선 추출 AI로 빠진 안쪽 선 채우기
+    var aiLines = false
     /// 도트화 전에 원본을 ESRGAN으로 4배 키울지(자동: 작은 원본일 때만)
     var upscale = UpscaleMode.auto
 
@@ -238,7 +245,7 @@ enum Dotting {
     }
 
     static func render(_ input: Reduced, settings: DotSettings, mask: [Bool]? = nil,
-                       details: [Int: Pixel] = [:]) throws -> Dotted {
+                       details: [Int: Pixel] = [:], lines: Raster? = nil) throws -> Dotted {
         try Task.checkCancellation()
         let grid = input.image.grid
         let cells = input.cells
@@ -334,6 +341,7 @@ enum Dotting {
             }
         }
         LineCleanup.apply(&output, mask: mask, outline: outline, width: settings.width)
+        if let lines { LineGuide.apply(&output, mask: mask, outline: outline, width: settings.width, lines: lines) }
         FaceDetail.apply(&output, mask: mask)
         output = try ColorReducer.apply(output, outline: outline, boundary: boundary, settings: settings)
         return Dotted(image: output, mask: mask, outline: outline, boundary: boundary, bodyCount: body.count, headCount: head.count)

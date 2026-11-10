@@ -55,7 +55,7 @@ enum Subject {
         return raster.crop(x: left, y: top, w: right - left + 1, h: bottom - top + 1)
     }
 
-    private static func removePaleBackdrop(_ raster: inout Raster) throws -> Bool {
+    static func removePaleBackdrop(_ raster: inout Raster) throws -> Bool {
         let grid = raster.grid
         // Flood only near-neutral, light pixels connected to a border. This protects white
         // fills inside the drawn contour and handles a pale canvas inside a screenshot.

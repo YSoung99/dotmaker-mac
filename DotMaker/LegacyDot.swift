@@ -1,10 +1,11 @@
 import CoreGraphics
 
 enum DotMethod: String, CaseIterable, Identifiable, Sendable {
+    case faithful = "원본 보존"
+    case soft = "원본 색 살림"
     case berry = "베리 잉크"
     case basic = "2.0 방식"
     case direct = "원본 직행"
-    case faithful = "원본 보존"
 
     var id: Self { self }
     var samplesOriginal: Bool { self == .direct || self == .faithful }
@@ -13,7 +14,7 @@ enum DotMethod: String, CaseIterable, Identifiable, Sendable {
 /// 이전 도트메이커(개선판 1.7.1)의 베리 잉크 변환을 배경이 지워진 캐릭터에 그대로 적용한다.
 /// 검은 외곽선과 몸통 경계색은 새 앱의 설정(1·2줄, 투명도)을 따른다.
 enum LegacyDot {
-    static func render(subject: Raster, w: Int, h: Int, settings: DotSettings) throws -> Dotted {
+    static func render(subject: Raster, w: Int, h: Int, settings: DotSettings, lines: Raster? = nil) throws -> Dotted {
         let image = try subject.image()
         let source = SourceImage(name: "subject", size: PixelSize(width: image.width, height: image.height), image: image)
         let size = PixelSize(width: w, height: h)
@@ -30,11 +31,11 @@ enum LegacyDot {
         conversion = try SourceCheck.apply(to: conversion, prepared: prepared, size: size, shift: shift, cells: nil).0
         conversion = try PixelPerfect.apply(to: conversion)
         try Task.checkCancellation()
-        return try finish(conversion, settings: settings)
+        return try finish(conversion, settings: settings, lines: lines)
     }
 
     /// 다 칠해진 도트 그림에 검은 외곽선(1·2줄), 겹선·얼룩 정리, 볼터치, 몸통 경계색을 입힌다.
-    static func finish(_ converted: Conversion, settings: DotSettings) throws -> Dotted {
+    static func finish(_ converted: Conversion, settings: DotSettings, lines: Raster? = nil) throws -> Dotted {
         let conversion = try FlatDot.outline(converted)
         var raster = try Raster(conversion.pixelArt)
         let grid = raster.grid
@@ -52,6 +53,7 @@ enum LegacyDot {
         }
         removeStrayInk(&raster, mask: mask, outline: outline, width: settings.width)
         LineCleanup.apply(&raster, mask: mask, outline: outline, width: settings.width)
+        if let lines { LineGuide.apply(&raster, mask: mask, outline: outline, width: settings.width, lines: lines) }
         FaceDetail.apply(&raster, mask: mask)
 
         // 몸통 경계색: 검은 줄 바로 안쪽의 흰 몸통 칸만 2.0과 같은 공식으로 한 가지 색을 칠한다.
