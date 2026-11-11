@@ -1,3 +1,6 @@
+> **📦 도트메이커는 [YSoung99/dotmaker](https://github.com/YSoung99/dotmaker)로 합쳐졌습니다.**
+> 3.5.0부터 맥용과 윈도우용을 [한 곳](https://github.com/YSoung99/dotmaker/releases/latest)에서 받습니다. 이 저장소는 예전 맥 전용 앱(Swift, 3.4.0까지)의 보관용이며 더 이상 업데이트하지 않습니다.
+
 # 도트메이커 (맥)
 
 캐릭터 그림 한 장을 열면 **원본의 선 굵기와 명암을 그대로 살린 도트 그림(투명 PNG)**으로 바꿔 주는 맥 앱입니다.
