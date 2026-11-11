@@ -64,4 +64,4 @@ xattr -dr com.apple.quarantine "/Applications/도트메이커 JEV 부위별 진�
 - [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) (RealESRGAN_x4plus_anime_6B, realesr-animevideov3 → ONNX): BSD-3-Clause
 - [p1atdev/MangaLineExtraction-hf](https://huggingface.co/p1atdev/MangaLineExtraction-hf) (선 추출, `DotMaker/lines-graph.onnx`는 구조만): MIT
 
-윈도우판: [DotMaker-3.4.0-win-x64.exe](https://github.com/YSoung99/dotmaker/releases/download/v3.4.0-windows/DotMaker-3.4.0-win-x64.exe) (소스는 [YSoung99/dotmaker의 desktop-app 브랜치](https://github.com/YSoung99/dotmaker/tree/desktop-app)).
+윈도우판과 최신 맥판: [YSoung99/dotmaker Releases](https://github.com/YSoung99/dotmaker/releases/latest) (소스는 [YSoung99/dotmaker](https://github.com/YSoung99/dotmaker)).
